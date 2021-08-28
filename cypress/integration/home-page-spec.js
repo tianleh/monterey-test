@@ -5,7 +5,7 @@ Cypress.on('uncaught:exception', (err, runnable) => {
     return false;
 });
 
-const homePage = new HomePage();
+const homePage = new HomePage(cy);
 
 describe('search amazon on google', () => {
     beforeEach(() => {
