@@ -1,5 +1,4 @@
-import { HOME_PAGE_ELEMENTS } from "./page-elements";
-import { HomePage } from './home-page'
+import { HomePage } from '@tianleh/tianleh-test-utility'
 
 Cypress.on('uncaught:exception', (err, runnable) => {
     return false;
@@ -9,7 +8,7 @@ const homePage = new HomePage(cy);
 
 describe('search amazon on google', () => {
     beforeEach(() => {
-        homePage.open();
+        homePage.open('https://www.google.com/');
     })
 
     it('type and search', () => {
