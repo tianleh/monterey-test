@@ -1,17 +1,22 @@
+import { HOME_PAGE_ELEMENTS } from "./page-elements";
+import { HomePage } from './home-page'
+
 Cypress.on('uncaught:exception', (err, runnable) => {
-	return false;
+    return false;
 });
 
-describe('open google', () => {
+const homePage = new HomePage();
+
+describe('search amazon on google', () => {
+    beforeEach(() => {
+        homePage.open();
+    })
+
     it('type and search', () => {
+        homePage.clickSearchBox();
 
-        cy.visit('https://www.google.com/')
+        homePage.typeInSearchBox("amazon");
 
-        cy.get('.gLFyf')
-            .type('amazon')
-
-        cy.get('.gLFyf')
-            .type(`{enter}`)
-        
+        homePage.submitSearchQuery()
     })
 })
