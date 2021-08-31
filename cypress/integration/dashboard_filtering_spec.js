@@ -1,4 +1,5 @@
-import { TestFixtureHandler, CommonUI, DashboardPage } from '@tianleh/tianleh-test-utility'
+import { TestFixtureHandler, CommonUI, DashboardPage, MiscUtils } from '@tianleh/tianleh-test-utility'
+
 /**
  * dashboard_filtering test suite description:
  * 1) Create a new dashboard, and populate it with visualizations
@@ -14,11 +15,9 @@ import { TestFixtureHandler, CommonUI, DashboardPage } from '@tianleh/tianleh-te
 const testFixtureHandler = new TestFixtureHandler(cy)
 const commonUI = new CommonUI(cy)
 const dashboardPage = new DashboardPage(cy)
-
+const miscUtils = new MiscUtils(cy)
 describe('dashboard filtering', () => {
   before(() => {
-    // WORK IN PROGRESS: https://github.com/AvivBenchorin/monterey/issues/11
-    
     testFixtureHandler.clearJSONMapping('cypress/fixtures/dashboard/data/mappings.json.txt')
 
     testFixtureHandler.importJSONMapping('cypress/fixtures/dashboard/opensearch_dashboards/mappings.json.txt')
@@ -29,7 +28,6 @@ describe('dashboard filtering', () => {
   })
 
   after(() => {
-    // WORK IN PROGRESS: https://github.com/AvivBenchorin/monterey/issues/11
     testFixtureHandler.clearJSONMapping('cypress/fixtures/dashboard/data/mappings.json.txt')
   })
 
@@ -44,17 +42,11 @@ describe('dashboard filtering', () => {
 
   describe('Adding and removing filters from a dashboard', () => {
     before(() => {
-      // Increase the viewport size to prevent pop-up notifications from blocking UI element
-      // E.g. after adding a saved visualization, a notification appears in the bottom right
-      // which could block clicking on a button located behind it.
-      // cy.viewport(1900, 1080)
-
       // Go to the Dashboards list page
-      cy.visit('app/dashboards/list')
+      miscUtils.visitPage('app/dashboards/list')
 
       // Click the "Create dashboard" button
-      cy.get('[data-test-subj="newItemButton"]', { timeout: 60000 }).should('be.visible').click()
-      cy.get('[data-test-subj="emptyDashboardWidget"]').should('be.visible')
+      miscUtils.createNewDashboard()
       // Change the time to be between Jan 1 2018 and Apr 13, 2018
       commonUI.setDateRange('Apr 13, 2018 @ 00:00:00.000', 'Jan 1, 2018 @ 00:00:00.000')
 
@@ -67,14 +59,9 @@ describe('dashboard filtering', () => {
 
     describe('adding a filter that excludes all data', () => {
       before(() => {
-        // Increase the viewport size to prevent pop-up notifications from blocking UI elements.
-        // E.g. after adding a saved visualization, a notification appears in the bottom right
-        // which could block clicking on a button located behind it.
-        // cy.viewport(1900, 1080)
 
         // Clear add filters to properly clean the environment for the test
-        cy.get('[data-test-subj="showFilterActions"]').click()
-        cy.get('[data-test-subj="removeAllFilters"]').click()
+        commonUI.removeAllFilters()
 
         // Add filter
         commonUI.addFilterRetrySelection('bytes', 'is', '12345678')
@@ -127,21 +114,18 @@ describe('dashboard filtering', () => {
       })
 
       it('Nonpinned filter: vega is filtered', () => {
-        cy.get('.vgaVis__view text').each(($el) => {
-          cy.get($el).should('not.contain', '5,000')
-        })
+        commonUI.checkValuesDoNotExistInComponent('.vgaVis__view text', ['5,000'])
       })
     })
 
     describe('using a pinned filter that excludes all data', () => {
       before(() => {
         // Clear add filters to properly clean environment for the test
-        cy.get('[data-test-subj="showFilterActions"]').click()
-        cy.get('[data-test-subj="removeAllFilters"]').click()
+        commonUI.removeAllFilters()
 
         commonUI.addFilterRetrySelection('bytes', 'is', '12345678')
-        cy.get('[data-test-subj="filter filter-enabled filter-key-bytes filter-value-12,345,678 filter-unpinned "]').click()
-        cy.get('[data-test-subj="pinFilter"]').click()
+        
+        commonUI.pinFilter('bytes')
       })
 
       it('Pinned filter: filters on pie charts', () => {
@@ -182,13 +166,11 @@ describe('dashboard filtering', () => {
       })
 
       it('Pinned filter: saved search is filtered', () => {
-        cy.get('[data-test-subj="docTableExpandToggleColumn"]').should('not.exist')
+        commonUI.checkElementDoesNotExist('[data-test-subj="docTableExpandToggleColumn"]')
       })
 
       it('Pinned filter: vega is filtered', () => {
-        cy.get('.vgaVis__view text').each(($el) => {
-          cy.get($el).should('not.contain', '5,000')
-        })
+        commonUI.checkValuesDoNotExistInComponent('.vgaVis__view text', ['5,000'])
       })
     })
 
@@ -196,14 +178,11 @@ describe('dashboard filtering', () => {
       before(() => {
         // TO DO: create delete filter helper function
         // Clear add filters to properly clean environment for the test
-        cy.get('[data-test-subj="showFilterActions"]').click()
-        cy.get('[data-test-subj="removeAllFilters"]').click()
+        commonUI.removeAllFilters()
 
         commonUI.addFilterRetrySelection('bytes', 'is', '12345678')
 
-        cy.get('[data-test-subj="filter filter-enabled filter-key-bytes filter-value-12,345,678 filter-unpinned "]').click()
-        cy.get('[data-test-subj="deleteFilter"]').click()
-        cy.get('[data-test-subj="filter filter-enabled filter-key-bytes filter-value-12,345,678 filter-unpinned "]').should('not.exist')
+        commonUI.removeFilter('bytes')
       })
 
       it('Filter disabled: pie charts', () => {
@@ -268,12 +247,10 @@ describe('dashboard filtering', () => {
   describe('nested filtering', () => {
     before(() => {
       // Go to the Dashboards list page
-      // cy.viewport(1900, 1080)
-      cy.visit('app/dashboards/list')
+      miscUtils.visitPage('app/dashboards/list')
 
       // Click the "Create dashboard" button
-      cy.get('[data-test-subj="newItemButton"]', { timeout: 20000 }).should('be.visible').click()
-      cy.get('[data-test-subj="emptyDashboardWidget"]').should('be.visible')
+      miscUtils.createNewDashboard(20000)
 
       // Change the time to be between Jan 1 2018 and Apr 13, 2018
       commonUI.setDateRange('Apr 13, 2018 @ 00:00:00.000', 'Jan 1, 2018 @ 00:00:00.000')
@@ -284,50 +261,42 @@ describe('dashboard filtering', () => {
     it('visualization saved with a query filters data', () => {
       commonUI.checkElementExists('svg > g > g.arcs > path.slice', 5)
 
-      cy.get('[data-test-subj="embeddablePanelToggleMenuIcon"]').click()
-      cy.get('[data-test-subj="embeddablePanelAction-editPanel"]').click()
+      dashboardPage.openVisualizationContextMenu('Rendering Test: animal sounds pie')
+      dashboardPage.clickEditVisualization()
 
-      cy.get('[data-test-subj="queryInput"]').type('{selectall}weightLbs:>50')
-      cy.get('[data-test-subj="querySubmitButton"]').click()
+      miscUtils.setQuery('weightLbs:>50')
       commonUI.checkElementExists('svg > g > g.arcs > path.slice', 3)
 
       dashboardPage.saveDashboardVisualization('Rendering Test: animal sounds pie', false, false)
 
-      cy.get('[data-test-subj="toggleNavButton"]').click()
-      cy.get('[data-test-subj="collapsibleNavAppLink"]').contains('Dashboard').click()
+      miscUtils.goToDashboardPage()
       commonUI.checkElementExists('svg > g > g.arcs > path.slice', 3)
     })
 
     it('Nested visualization filter pills filters data as expected', () => {
-      cy.get('[data-test-subj="embeddablePanelToggleMenuIcon"]').click()
-      cy.get('[data-test-subj="embeddablePanelAction-editPanel"]').click()
+      dashboardPage.openVisualizationContextMenu('Rendering Test: animal sounds pie')
+      dashboardPage.clickEditVisualization()
 
-      cy.get('[data-test-subj="pieSlice-grr"]').click()
+      commonUI.pieChartFilterOnSlice('grr')
       commonUI.checkElementExists('svg > g > g.arcs > path.slice', 1)
 
       dashboardPage.saveDashboardVisualization('animal sounds pie', false, false)
 
-      cy.get('[data-test-subj="toggleNavButton"]').click()
-      cy.get('[data-test-subj="collapsibleNavAppLink"]').contains('Dashboard').click()
+      miscUtils.goToDashboardPage()
       commonUI.checkElementExists('svg > g > g.arcs > path.slice', 1)
     })
 
     it('Removing filter pills and query unfiters data as expected', () => {
-      cy.get('[data-test-subj="embeddablePanelToggleMenuIcon"]').click()
-      cy.get('[data-test-subj="embeddablePanelAction-editPanel"]').click()
+      dashboardPage.openVisualizationContextMenu('animal sounds pie')
+      dashboardPage.clickEditVisualization()
 
-      cy.get('[data-test-subj="queryInput"]').type('{selectall}{backspace}')
-      cy.get('[data-test-subj="querySubmitButton"]').click()
-
-      cy.get('[data-test-subj="filter filter-enabled filter-key-sound.keyword filter-value-grr filter-unpinned "]').click()
-      cy.get('[data-test-subj="deleteFilter"]').click()
-
+      miscUtils.removeQuery()
+      commonUI.pieChartRemoveFilter('sound.keyword')
       commonUI.checkElementExists('svg > g > g.arcs > path.slice', 5)
 
       dashboardPage.saveDashboardVisualization('Rendering Test: animal sounds pie', false, false)
+      miscUtils.goToDashboardPage()
 
-      cy.get('[data-test-subj="toggleNavButton"]').click()
-      cy.get('[data-test-subj="collapsibleNavAppLink"]').contains('Dashboard').click()
       commonUI.checkElementExists('svg > g > g.arcs > path.slice', 5)
     })
     it('Pie chart linked to saved search filters data', () => {
@@ -336,8 +305,7 @@ describe('dashboard filtering', () => {
     })
 
     it('Pie chart linked to saved search filters shows no data with conflicting dashboard query', () => {
-      cy.get('[data-test-subj="queryInput"]').type('{selectall}weightLbs<40')
-      cy.get('[data-test-subj="querySubmitButton"]').click()
+      miscUtils.setQuery('weightLbs<40')
       commonUI.checkElementExists('svg > g > g.arcs > path.slice', 5)
     })
   })
