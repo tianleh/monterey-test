@@ -65,15 +65,15 @@ jobs:
           cd OpenSearch-Dashboards
           yarn start --no-base-path --no-watch &
           timeout 300 bash -c 'while [[ "$(curl -s localhost:5601/api/status | jq -r '.status.overall.state')" != "green" ]]; do sleep 5; done'
-      - name: Checkout tianleh-test-cases
+      - name: Checkout Monterey test cases
         uses: actions/checkout@v2
         with:
           repository: ${{github.repository}}
-          path: tianleh-test-cases
+          path: monetery-test
       - name: Get Cypress version
         id: cypress_version
         run: |
-          echo "::set-output name=cypress_version::$(cat ./tianleh-test-cases/package.json | jq '.devDependencies.cypress' | tr -d '"')"
+          echo "::set-output name=cypress_version::$(cat ./monetery-test/package.json | jq '.devDependencies.cypress' | tr -d '"')"
       - name: Cache Cypress
         id: cache-cypress
         uses: actions/cache@v1
@@ -87,7 +87,7 @@ jobs:
       - name: Cypress tests
         uses: cypress-io/github-action@v2
         with:
-          working-directory: tianleh-test-cases
+          working-directory: monetery-test
           command: yarn run cypress run --browser chrome --headless
           wait-on: 'http://localhost:5601'
       # Screenshots are only captured on failure, will change this once we do visual regression tests
@@ -95,10 +95,10 @@ jobs:
         if: failure()
         with:
           name: cypress-screenshots
-          path: tianleh-test-cases/cypress/screenshots
+          path: monetery-test/cypress/screenshots
       # Test run video was always captured, so this action uses "always()" condition
       - uses: actions/upload-artifact@v1
         if: always()
         with:
           name: cypress-videos
-          path: tianleh-test-cases/cypress/videos
+          path: monetery-test/cypress/videos
