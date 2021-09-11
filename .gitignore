@@ -109,3 +109,5 @@ cypress/videos
 cypress/screenshots
 cypress/results
 cypress/downloads
+
+package-lock.json
