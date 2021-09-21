@@ -27,8 +27,7 @@ jobs:
           wget https://artifacts.opensearch.org/releases/bundle/opensearch/1.0.1/opensearch-1.0.1-linux-x64.tar.gz
           tar -xzf opensearch-1.0.1-linux-x64.tar.gz
           cd opensearch-1.0.1/
-          ./opensearch-tar-install.sh &
-          timeout 300 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:9200)" != "200" ]]; do sleep 5; done'
+          ./opensearch-tar-install.sh
       - name: Get OpenSearch-Dashboards
         run: |
           wget https://artifacts.opensearch.org/releases/bundle/opensearch-dashboards/1.0.1/opensearch-dashboards-1.0.1-linux-x64.tar.gz
